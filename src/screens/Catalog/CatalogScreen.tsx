@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../constants/theme';
 
 const { width } = Dimensions.get('window');
-const COLORS = { PRIMARY: '#8B4513', BACKGROUND: '#ffffff', MUTED: '#6b7280' };
 
 export default function CatalogScreen() {
   const categories = [
@@ -16,29 +17,91 @@ export default function CatalogScreen() {
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Our Pipe Collection</Text>
-        <View style={styles.catalogGrid}>
+    <LinearGradient colors={theme.gradients.background} style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Our Pipe Collection</Text>
+          <Text style={styles.subtitle}>Handcrafted excellence in every piece</Text>
+        </View>
+
+        <View style={styles.categoriesContainer}>
           {categories.map((category, index) => (
             <TouchableOpacity key={index} style={styles.categoryCard}>
-              <Ionicons name={category.icon} size={32} color={COLORS.PRIMARY} />
-              <Text style={styles.categoryName}>{category.name}</Text>
-              <Text style={styles.categoryCount}>{category.count}</Text>
+              <LinearGradient
+                colors={[theme.colors.background.card, theme.colors.background.secondary]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.iconContainer}>
+                  <Ionicons name={category.icon} size={32} color={theme.colors.accent.gold} />
+                </View>
+                <Text style={styles.categoryName}>{category.name}</Text>
+                <Text style={styles.categoryCount}>{category.count}</Text>
+              </LinearGradient>
             </TouchableOpacity>
           ))}
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.BACKGROUND },
-  section: { padding: 20 },
-  sectionTitle: { fontSize: 22, fontWeight: 'bold', color: '#333', marginBottom: 16 },
-  catalogGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  categoryCard: { width: (width - 60) / 2, backgroundColor: '#f9f9f9', padding: 20, borderRadius: 12, alignItems: 'center', marginBottom: 16 },
-  categoryName: { fontSize: 14, fontWeight: '600', color: '#333', marginTop: 8, textAlign: 'center' },
-  categoryCount: { fontSize: 12, color: COLORS.MUTED, marginTop: 4 },
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: theme.colors.text.muted,
+    textAlign: 'center',
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: theme.spacing.lg,
+  },
+  categoryCard: {
+    width: (width - 60) / 2,
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
+  },
+  cardGradient: {
+    padding: theme.spacing.lg,
+    alignItems: 'center',
+    minHeight: 140,
+    borderWidth: 1,
+    borderColor: theme.colors.border.secondary,
+  },
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.background.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  categoryCount: {
+    fontSize: 12,
+    color: theme.colors.text.muted,
+    textAlign: 'center',
+  },
 });

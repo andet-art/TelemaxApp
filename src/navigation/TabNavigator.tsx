@@ -1,14 +1,15 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../constants/theme';
 
+// Import screens
 import HomeScreen from '../screens/Home/HomeScreen';
 import CatalogScreen from '../screens/Catalog/CatalogScreen';
 import CartScreen from '../screens/Cart/CartScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
-const COLORS = { PRIMARY: '#8B4513', MUTED: '#6b7280' };
 
 export default function TabNavigator() {
   return (
@@ -31,10 +32,10 @@ export default function TabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: COLORS.PRIMARY,
-        tabBarInactiveTintColor: COLORS.MUTED,
+        tabBarActiveTintColor: theme.colors.accent.gold,
+        tabBarInactiveTintColor: theme.colors.text.muted,
         headerStyle: {
-          backgroundColor: COLORS.PRIMARY,
+          backgroundColor: theme.colors.primary[700],
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
@@ -42,10 +43,10 @@ export default function TabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
-      <Tab.Screen name="Catalog" component={CatalogScreen} options={{ title: 'Our Pipes' }} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ title: 'Shopping Cart' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'My Account' }} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Catalog" component={CatalogScreen} />
+      <Tab.Screen name="Cart" component={CartScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
