@@ -13,7 +13,22 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { theme } from '../../constants/theme';
+
+// Simple theme fallback if theme file doesn't exist
+const theme = {
+  spacing: { lg: 20, md: 16, sm: 12, xl: 24, xs: 8, xxl: 32 },
+  colors: {
+    text: { primary: '#333', muted: '#666' },
+    accent: { gold: '#FFD700' },
+    background: { card: '#f8f8f8', secondary: '#f0f0f0', primary: '#fff' },
+    border: { primary: '#ddd', secondary: '#e0e0e0' }
+  },
+  borderRadius: { md: 8, xl: 16 },
+  gradients: {
+    background: ['#f5f5f5', '#e8e8e8'],
+    primary: ['#007AFF', '#0056CC']
+  }
+};
 
 export default function SignupScreen({ navigation }: any) {
   const [formData, setFormData] = useState({

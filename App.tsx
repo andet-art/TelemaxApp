@@ -1,16 +1,13 @@
-// ðŸ”§ Polyfills MUST come first (before i18n or anything that might use Intl/URL)
+// í´§ Polyfills MUST come first (before i18n or anything that might use Intl/URL)
 import 'react-native-url-polyfill/auto';
 import './src/polyfills';
-
 // i18n init (now safe)
 import './src/i18n';
-
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';        
 import { StatusBar } from 'expo-status-bar';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { createStackNavigator } from '@react-navigation/stack';
-
+import { AuthProvider, useAuth } from './src/context/AuthContext';     
+import { createStackNavigator } from '@react-navigation/stack';        
 // Screens
 import LoginScreen from './src/screens/Auth/LoginScreen';
 import SignupScreen from './src/screens/Auth/SignupScreen';
@@ -19,9 +16,19 @@ import TabNavigator from './src/navigation/TabNavigator';
 const Stack = createStackNavigator();
 
 function AppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, checkStoredAuth } = useAuth();
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
-  if (isLoading) return null; // (optional) show a loading screen here
+  // Check for stored auth on first load
+  React.useLayoutEffect(() => {
+    if (!hasCheckedAuth) {
+      checkStoredAuth().then(() => {
+        setHasCheckedAuth(true);
+      });
+    }
+  }, [hasCheckedAuth, checkStoredAuth]);
+
+  if (!hasCheckedAuth || isLoading) return null; // Show loading screen
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -29,8 +36,8 @@ function AppContent() {
         <Stack.Screen name="Main" component={TabNavigator} />
       ) : (
         <>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />        
+          <Stack.Screen name="Signup" component={SignupScreen} />      
         </>
       )}
     </Stack.Navigator>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -9,6 +9,12 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// Debug section
+console.log('=== AuthContext Debug ===');
+console.log('axios:', typeof axios);
+console.log('api object:', api);
+console.log('api.post:', typeof api.post);
 
 interface User {
   id: number;
@@ -25,7 +31,6 @@ interface AuthContextType {
   signup: (userData: any) => Promise<boolean>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  checkStoredAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,27 +43,18 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Manual function to check stored auth (call this manually instead of useEffect)
-  const checkStoredAuth = async () => {
-    try {
-      setIsLoading(true);
+  useEffect(() => {
+    (async () => {
       const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        console.log('Found stored user:', JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.error('Error checking stored auth:', error);
-    } finally {
+      if (storedUser) setUser(JSON.parse(storedUser));
       setIsLoading(false);
-    }
-  };
+    })();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      setIsLoading(true);
       console.log('Attempting login with:', { email });
       const res = await api.post('/api/auth/signin', { email, password });
       console.log('Login response:', res.data);
@@ -73,46 +69,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await AsyncStorage.setItem('user', JSON.stringify(backendUser));
       await AsyncStorage.setItem('token', token);
       setUser(backendUser);
+
       return true;
     } catch (err: any) {
       console.error('Login error:', err.response?.data || err.message);
+      console.error('Full error:', err);
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signup = async (userData: any): Promise<boolean> => {
     try {
-      setIsLoading(true);
       const res = await api.post('/api/auth/signup', {
         first_name: userData.firstName,
         last_name: userData.lastName,
         email: userData.email,
         password: userData.password
       });
-      
-      if (res.data?.message === 'User created') {
-        console.log('Signup successful');
-        return true;
-      }
-      return false;
+      return res.data?.message === 'User created';
     } catch (err: any) {
       console.error('Signup error:', err.response?.data || err.message);
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = async () => {
-    try {
-      await AsyncStorage.multiRemove(['user', 'token']);
-      setUser(null);
-      console.log('Logout successful');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await AsyncStorage.multiRemove(['user', 'token']);
+    setUser(null);
   };
 
   return (
@@ -122,8 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       login,
       signup,
       logout,
-      isAuthenticated: !!user,
-      checkStoredAuth
+      isAuthenticated: !!user
     }}>
       {children}
     </AuthContext.Provider>
