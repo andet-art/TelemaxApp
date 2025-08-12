@@ -1,15 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-
-const API_BASE = "http://209.38.231.125:4000"; // your backend IP
+import { signin, signup as signupRequest } from '../services/api';
+ // adjust path if needed
 
 interface User {
-  id: string;
+  id: number;
   email: string;
-  firstName: string;
-  lastName: string;
-  avatar?: string;
+  role: string;
+  first_name: string;
+  last_name: string;
 }
 
 interface AuthContextType {
@@ -25,92 +24,70 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuthState();
-  }, []);
-
-  const checkAuthState = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    } catch (error) {
-      console.error('Error checking auth state:', error);
-    } finally {
+    (async () => {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
       setIsLoading(false);
-    }
-  };
+    })();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/signin`, { email, password });
+      const res = await signin({ email, password });
+      const { token, user: backendUser } = res.data;
 
-      if (res.data?.token) {
-        const backendUser = res.data.user;
-        await AsyncStorage.setItem('user', JSON.stringify(backendUser));
-        await AsyncStorage.setItem('token', res.data.token);
-        setUser(backendUser);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
+      if (!token || !backendUser) return false;
+
+      await AsyncStorage.setItem('user', JSON.stringify(backendUser));
+      await AsyncStorage.setItem('token', token);
+      setUser(backendUser);
+
+      return true;
+    } catch (err: any) {
+      console.error('Login error:', err.response?.data || err.message);
       return false;
     }
   };
 
   const signup = async (userData: any): Promise<boolean> => {
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/signup`, {
+      const res = await signupRequest({
         first_name: userData.firstName,
         last_name: userData.lastName,
         email: userData.email,
         password: userData.password
       });
-
-      if (res.data?.message === "User created") {
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Signup error:', error);
+      return res.data?.message === 'User created';
+    } catch (err: any) {
+      console.error('Signup error:', err.response?.data || err.message);
       return false;
     }
   };
 
   const logout = async () => {
-    try {
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('token');
-      setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await AsyncStorage.multiRemove(['user', 'token']);
+    setUser(null);
   };
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    login,
-    signup,
-    logout,
-    isAuthenticated: !!user,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      login,
+      signup,
+      logout,
+      isAuthenticated: !!user
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
