@@ -1,10 +1,10 @@
 import mysql from 'mysql2/promise';
 
 const {
-  DB_HOST = '127.0.0.1',
+  DB_HOST = '209.38.231.125',
   DB_NAME = 'telemax',
   DB_USER = 'telemax',
-  DB_PASS = '',
+  DB_PASS = 'Neon@2025Server!',
   DB_PORT = '3306',
 } = process.env;
 
